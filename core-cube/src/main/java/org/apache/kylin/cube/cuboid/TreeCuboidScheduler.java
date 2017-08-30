@@ -19,7 +19,6 @@
 package org.apache.kylin.cube.cuboid;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -243,7 +242,7 @@ public class TreeCuboidScheduler extends CuboidScheduler {
         @JsonIgnore
         int level;
         @JsonProperty("children")
-        List<TreeNode> children = new ArrayList<>();
+        List<TreeNode> children = Lists.newArrayList();
 
         public long getCuboidId() {
             return cuboidId;
