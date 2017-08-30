@@ -168,6 +168,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
+    @JsonProperty("mandatory_dimension_set_list")
+    private List<Set<String>> mandatoryDimensionSetList = Collections.emptyList();
+
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
     private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
@@ -438,6 +441,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.overrideKylinProps = overrideKylinProps;
     }
 
+    public List<Set<String>> getMandatoryDimensionSetList() {
+        return mandatoryDimensionSetList;
+    }
+
+    public void setMandatoryDimensionSetList(List<Set<String>> mandatoryDimensionSetList) {
+        this.mandatoryDimensionSetList = mandatoryDimensionSetList;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -526,6 +537,13 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     .append(JsonUtil.writeValueAsString(this.engineType)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
 
+            if (mandatoryDimensionSetList != null && !mandatoryDimensionSetList.isEmpty()) {
+                for (Set<String> mandatoryDimensionSet : mandatoryDimensionSetList) {
+                    TreeSet<String> sortedSet = Sets.newTreeSet(mandatoryDimensionSet);
+                    sigString.append(JsonUtil.writeValueAsString(sortedSet)).append("|");
+                }
+            }
+
             String signatureInput = sigString.toString().replaceAll("\\s+", "").toLowerCase();
 
             byte[] signature = md.digest(signatureInput.getBytes());
@@ -599,6 +617,26 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         initDictionaryDesc();
         amendAllColumns();
+
+        // check if mandatory dimension set list is valid
+        validateMandatoryDimensionSetList();
+    }
+
+    public void validateMandatoryDimensionSetList() {
+        Set<String> rowKeyColumns = Sets.newHashSet();
+        for (RowKeyColDesc entry : getRowkey().getRowKeyColumns()) {
+            rowKeyColumns.add(entry.getColumn());
+        }
+
+        for (Set<String> mandatoryDimensionSet : this.mandatoryDimensionSetList) {
+            for (String columnName : mandatoryDimensionSet) {
+                if (!rowKeyColumns.contains(columnName)) {
+                    logger.info("Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
+                    throw new IllegalStateException(
+                            "Column " + columnName + " in " + mandatoryDimensionSet + " does not exist");
+                }
+            }
+        }
     }
 
     public CuboidScheduler getInitialCuboidScheduler() {

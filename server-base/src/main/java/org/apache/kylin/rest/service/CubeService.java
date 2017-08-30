@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +39,7 @@ import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.common.CuboidRecommenderUtil;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -745,5 +747,30 @@ public class CubeService extends BasicService {
         }
 
         return filtered;
+    }
+
+    /** cube planner services */
+    public Map<Long, Long> formatQueryCount(List<List<String>> orgQueryCount) {
+        Map<Long, Long> formattedQueryCount = Maps.newLinkedHashMap();
+        for (List<String> hit : orgQueryCount) {
+            formattedQueryCount.put(Long.parseLong(hit.get(0)), (long) Double.parseDouble(hit.get(1)));
+        }
+        return formattedQueryCount;
+    }
+
+    public Map<Long, Map<Long, Long>> formatRollingUpCount(List<List<String>> orgRollingUpCount) {
+        Map<Long, Map<Long, Long>> formattedRollingUpCount = Maps.newLinkedHashMap();
+        for (List<String> rollingUp : orgRollingUpCount) {
+            Map<Long, Long> childMap = Maps.newLinkedHashMap();
+            childMap.put(Long.parseLong(rollingUp.get(1)), (long) Double.parseDouble(rollingUp.get(2)));
+            formattedRollingUpCount.put(Long.parseLong(rollingUp.get(0)), childMap);
+        }
+        return formattedRollingUpCount;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION')")
+    public Map<Long, Long> getRecommendCuboidStatistics(CubeInstance cube, Map<Long, Long> hitFrequencyMap,
+            Map<Long, Map<Long, Long>> rollingUpCountSourceMap) throws IOException {
+        return CuboidRecommenderUtil.getRecommendCuboidList(cube, hitFrequencyMap, rollingUpCountSourceMap);
     }
 }
