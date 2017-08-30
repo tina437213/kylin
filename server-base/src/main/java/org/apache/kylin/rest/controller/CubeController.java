@@ -39,6 +39,7 @@ import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -50,6 +51,7 @@ import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
+import org.apache.kylin.rest.request.JobOptimizeRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
@@ -304,6 +306,64 @@ public class CubeController extends BasicController {
         } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
+        }
+    }
+
+    /**
+     * Send a optimize cube job
+     *
+     * @param cubeName Cube ID
+     * @return JobInstance of CheckpointExecutable
+     */
+    @RequestMapping(value = "/{cubeName}/optimize", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance optimize(@PathVariable String cubeName, @RequestBody JobOptimizeRequest jobOptimizeRequest) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+
+            if (cube == null) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+            logger.info("cuboid recommend:" + jobOptimizeRequest.getCuboidsRecommend());
+            return jobService.submitOptimizeJob(cube, jobOptimizeRequest.getCuboidsRecommend(), submitter).getFirst();
+        } catch (JobException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new BadRequestException(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Send a optimize cube segment job
+     *
+     * @param cubeName Cube ID
+     * @param segmentID for segment to be optimized
+     */
+    @RequestMapping(value = "/{cubeName}/recover_segment_optimize/{segmentID}", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance recoverSegmentOptimize(@PathVariable String cubeName, @PathVariable String segmentID) {
+        try {
+            String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+            CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+            if (cube == null) {
+                throw new InternalErrorException("Cannot find cube " + cubeName);
+            }
+
+            CubeSegment segment = cube.getSegmentById(segmentID);
+            if (segment == null) {
+                throw new InternalErrorException("Cannot find segment '" + segmentID + "'");
+            }
+
+            return jobService.submitRecoverSegmentOptimizeJob(segment, submitter);
+        } catch (JobException e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new BadRequestException(e.getLocalizedMessage());
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
 

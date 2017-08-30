@@ -146,6 +146,17 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return segments.getMergingSegments(mergedSegment);
     }
 
+    public CubeSegment getOriginalSegmentToOptimize(CubeSegment optimizedSegment) {
+        for (CubeSegment segment : this.getSegments(SegmentStatusEnum.READY)) {
+            if (!optimizedSegment.equals(segment) //
+                    && optimizedSegment.getDateRangeStart() == segment.getDateRangeStart()
+                    && optimizedSegment.getDateRangeEnd() == segment.getDateRangeEnd()) {
+                return segment;
+            }
+        }
+        return null;
+    }
+
     public CubeDesc getDescriptor() {
         return CubeDescManager.getInstance(config).getCubeDesc(descName);
     }
@@ -351,7 +362,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             return cuboidsRecommend;
         case RECOMMEND_MISSING_WITH_BASE:
             cuboidsRecommend.removeAll(currentCuboids);
-            currentCuboids.add(getCuboidScheduler().getBaseCuboidId());
+            cuboidsRecommend.add(getCuboidScheduler().getBaseCuboidId());
             return cuboidsRecommend;
         default:
             return null;

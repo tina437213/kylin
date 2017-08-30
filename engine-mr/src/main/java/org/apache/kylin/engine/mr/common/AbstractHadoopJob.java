@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -93,6 +94,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder.withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false).withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
     protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT).hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false).withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
+    protected static final Option OPTION_CUBOID_MODE = OptionBuilder.withArgName(BatchConstants.ARG_CUBOID_MODE)
+            .hasArg().isRequired(false).withDescription("Cuboid Mode").create(BatchConstants.ARG_CUBOID_MODE);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
@@ -459,7 +462,21 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         dumpKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
     }
 
+    protected void attachSegmentsMetadataWithDict(List<CubeSegment> segments, Configuration conf) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        CubeInstance cube = segments.get(0).getCubeInstance();
+        dumpList.addAll(collectCubeMetadata(cube));
+        for (CubeSegment segment : segments) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+        dumpKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+    }
+
     protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
+        attachSegmentMetadata(segment, conf, true, false);
+    }
+
+    protected void attachSegmentMetadataWithAll(CubeSegment segment, Configuration conf) throws IOException {
         attachSegmentMetadata(segment, conf, true, true);
     }
 

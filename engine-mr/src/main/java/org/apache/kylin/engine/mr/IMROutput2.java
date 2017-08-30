@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public interface IMROutput2 {
@@ -67,7 +68,7 @@ public interface IMROutput2 {
         public void configureJobInput(Job job, String input) throws Exception;
 
         /** Configure the OutputFormat of given job. */
-        public void configureJobOutput(Job job, String output, CubeSegment segment, int level) throws Exception;
+        public void configureJobOutput(Job job, String output, CubeSegment segment, CuboidScheduler cuboidScheduler, int level) throws Exception;
 
     }
 
@@ -113,4 +114,14 @@ public interface IMROutput2 {
         public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube);
     }
 
+    public IMRBatchOptimizeOutputSide2 getBatchOptimizeOutputSide(CubeSegment seg);
+
+    public interface IMRBatchOptimizeOutputSide2 {
+
+        public void addStepPhase1_CreateHTable(DefaultChainedExecutable jobFlow);
+
+        public void addStepPhase2_BuildCube(DefaultChainedExecutable jobFlow);
+
+        public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
+    }
 }

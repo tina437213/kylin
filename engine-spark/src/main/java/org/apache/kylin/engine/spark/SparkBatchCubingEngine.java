@@ -20,6 +20,7 @@ package org.apache.kylin.engine.spark;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.IBatchCubingEngine;
+import org.apache.kylin.engine.mr.BatchOptimizeJobBuilder2;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
@@ -43,6 +44,11 @@ public class SparkBatchCubingEngine implements IBatchCubingEngine {
     @Override
     public DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return null;
+    }
+
+    @Override
+    public DefaultChainedExecutable createBatchOptimizeJob(CubeSegment optimizeSegment, String submitter) {
+        return new BatchOptimizeJobBuilder2(optimizeSegment, submitter).build();
     }
 
     @Override
