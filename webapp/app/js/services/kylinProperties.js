@@ -107,5 +107,13 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     }
   }
 
+  this.isRangerAclEnabled = function() {
+    var status = this.getProperty("kylin.authorization.ranger-acl-enabled").trim();
+	if (status === 'true') {
+	  return true;
+	}
+    return false;
+  }
+
 });
 

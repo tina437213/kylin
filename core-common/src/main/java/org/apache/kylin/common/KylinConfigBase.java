@@ -1210,4 +1210,16 @@ abstract public class KylinConfigBase implements Serializable {
     public String getPerfLoggerClassName() {
         return getOptional("kylin.metric.perf-logger.class", "org.apache.kylin.common.metrics.perflog.PerfLogger");
     }
+
+    public String getAuthorizationProvider() {
+        if (isRangerAclEnabled()) {
+            return getOptional("kylin.authorization.provider", "org.apache.kylin.rest.security.KylinAuthorization");
+        } else {
+            return "org.apache.kylin.rest.security.KylinAuthorization";
+        }
+    }
+
+    public boolean isRangerAclEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.authorization.ranger-acl-enabled", "false"));
+    }
 }

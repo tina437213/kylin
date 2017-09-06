@@ -48,4 +48,9 @@ public class Constant {
     public final static String SERVER_MODE_JOB = "job";
     public final static String SERVER_MODE_ALL = "all";
 
+    public final static String CUBE_ADMIN = "CUBE ADMIN";
+    public final static String CUBE_EDIT = "CUBE EDIT";
+    public final static String CUBE_OPERATION = "CUBE OPERATION";
+    public final static String CUBE_QUERY = "CUBE QUERY";
+
 }

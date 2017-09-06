@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.security.KylinAuthorizationProvider;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
@@ -118,6 +119,7 @@ public class JobService extends BasicService implements InitializingBean {
                 .scheduler(kylinConfig.getSchedulerType());
 
         jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
+        KylinAuthorizationProvider.getInstance(kylinConfig);
 
         new Thread(new Runnable() {
             @Override
