@@ -626,7 +626,7 @@ public class CubeDescCreator {
         FunctionDesc function = new FunctionDesc();
         function.setExpression(PercentileMeasureType.FUNC_PERCENTILE);
         function.setParameter(parameterDesc);
-        function.setReturnType(PercentileMeasureType.DATATYPE_PERCENTILE);
+        function.setReturnType("percentile(100)");
 
         MeasureDesc result = new MeasureDesc();
         result.setName(column + "_PERCENTILE");
